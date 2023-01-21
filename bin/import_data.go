@@ -9,11 +9,11 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
-	_ "github.com/lib/pq"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
 	"masoodahm/packform/models"
+	"masoodahm/packform/utils"
 )
 
 func goDotEnvVariable(key string) string {
@@ -37,16 +37,82 @@ func main() {
 	}
 
 	createTables(dbContext)
+	importCompanies(dbContext, "seed_data/Test task - Postgres - customer_companies.csv")
+	importCustomers(dbContext, "seed_data/Test task - Postgres - customers.csv")
 	importOrders(dbContext, "seed_data/Test task - Postgres - orders.csv")
 	importOrderItems(dbContext, "seed_data/Test task - Postgres - order_items.csv")
-	importDeliveries(dbContext, "Test task - Postgres - deliveries.csv")
+	importDeliveries(dbContext, "seed_data/Test task - Postgres - deliveries.csv")
+
 }
 
-func importOrders(db *gorm.DB, filePath string) {
-	f := openFile(filePath)
-	defer f.Close()
+func importCompanies(db *gorm.DB, csvFilePath string) {
+	file := openFile(csvFilePath)
+	defer file.Close()
 
-	csvReader := csv.NewReader(f)
+	csvReader := csv.NewReader(file)
+	records, err := csvReader.ReadAll()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	for index, row := range records {
+		// skip first row as it is just column names
+		if index >= 1 {
+			company := models.Company{}
+
+			company_id, err := strconv.ParseInt(row[0], 10, 64)
+			if err != nil {
+				log.Fatal(err.Error())
+			}
+			company.Id = company_id
+			company.CompanyName = row[1]
+			result := db.Create(&company)
+			if result.Error != nil {
+				log.Fatal(result.Error)
+			}
+		}
+	}
+}
+
+func importCustomers(db *gorm.DB, csvFilePath string) {
+	file := openFile(csvFilePath)
+	defer file.Close()
+
+	csvReader := csv.NewReader(file)
+	records, err := csvReader.ReadAll()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	for index, row := range records {
+		// skip first row as it is just column names
+		if index >= 1 {
+			customer := models.Customer{}
+			customer.UserId = row[0]
+			customer.Login = row[1]
+			password, err := utils.HashPassword(row[2])
+			if err != nil {
+				log.Fatal(err.Error())
+			}
+			customer.Password = password
+			customer.Name = row[3]
+			customer.CreditCards = row[5]
+			companyId, err := strconv.ParseInt(row[4], 10, 64)
+			if err != nil {
+				log.Fatal(err.Error())
+			}
+			customer.CompanyId = companyId
+			result := db.Create(&customer)
+			if result.Error != nil {
+				log.Fatal(result.Error)
+			}
+		}
+	}
+}
+
+func importOrders(db *gorm.DB, csvFilePath string) {
+	file := openFile(csvFilePath)
+	defer file.Close()
+
+	csvReader := csv.NewReader(file)
 	records, err := csvReader.ReadAll()
 	if err != nil {
 		log.Fatal(err.Error())
@@ -60,7 +126,7 @@ func importOrders(db *gorm.DB, filePath string) {
 			}
 			createdAt, err := time.Parse(time.RFC3339, row[1])
 			if err != nil {
-				log.Fatal(err.Error())
+				createdAt = time.Now()
 			}
 			order := models.Order{}
 			order.CreatedAt = createdAt
@@ -75,11 +141,11 @@ func importOrders(db *gorm.DB, filePath string) {
 	}
 }
 
-func importDeliveries(db *gorm.DB, filePath string) {
-	f := openFile(filePath)
-	defer f.Close()
+func importDeliveries(db *gorm.DB, csvFilePath string) {
+	file := openFile(csvFilePath)
+	defer file.Close()
 
-	csvReader := csv.NewReader(f)
+	csvReader := csv.NewReader(file)
 	records, err := csvReader.ReadAll()
 	if err != nil {
 		log.Fatal(err.Error())
@@ -99,7 +165,7 @@ func importDeliveries(db *gorm.DB, filePath string) {
 
 			delivered_quantity, err := strconv.ParseInt(row[0], 10, 64)
 			if err != nil {
-				log.Fatal(err.Error())
+				delivered_quantity = 0
 			}
 
 			delivery := models.Delivery{}
@@ -123,8 +189,8 @@ func openFile(filePath string) *os.File {
 	return f
 }
 
-func importOrderItems(db *gorm.DB, filePath string) {
-	f := openFile(filePath)
+func importOrderItems(db *gorm.DB, csvFilePath string) {
+	f := openFile(csvFilePath)
 	defer f.Close()
 
 	csvReader := csv.NewReader(f)
@@ -147,12 +213,12 @@ func importOrderItems(db *gorm.DB, filePath string) {
 
 			unit_price, err := strconv.ParseFloat(row[2], 64)
 			if err != nil {
-				log.Fatal(err.Error())
+				unit_price = 0
 			}
 
 			quantity, err := strconv.ParseInt(row[3], 10, 64)
 			if err != nil {
-				log.Fatal(err.Error())
+				quantity = 0
 			}
 
 			orderItem := models.OrderItem{}
@@ -172,8 +238,8 @@ func importOrderItems(db *gorm.DB, filePath string) {
 func createTables(db *gorm.DB) {
 
 	db.AutoMigrate(
-		&models.CustomerComapnies{},
-		&models.Customers{},
+		&models.Company{},
+		&models.Customer{},
 		&models.Delivery{},
 		&models.Order{},
 		&models.OrderItem{},
@@ -181,7 +247,10 @@ func createTables(db *gorm.DB) {
 }
 
 func getDBContext(db_host string, db_name string, db_pass string, db_port string, db_user string) (*gorm.DB, error) {
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Australia/Melbourne", db_host, db_user, db_pass, db_name, db_port)
+	dsn := fmt.Sprintf(
+		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Australia/Melbourne",
+		db_host, db_user, db_pass, db_name, db_port,
+	)
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	return db, err
 }

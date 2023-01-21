@@ -7,6 +7,12 @@ import { RouterLink, RouterView } from "vue-router";
   <RouterView />
 </template>
 
-<style scoped>
+<style>
+
+
+#app {
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+  color: #333333;
+}
 
 </style>

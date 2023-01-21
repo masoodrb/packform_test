@@ -3,6 +3,7 @@ module masoodahm/packform
 go 1.19
 
 require (
+	github.com/gocarina/gocsv v0.0.0-20221216233619-1fea7ae8d380 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
 	github.com/jackc/pgx/v5 v5.2.0 // indirect
