@@ -2,36 +2,18 @@ package main
 
 import (
 	"encoding/csv"
-	"fmt"
 	"log"
+	"masoodrb/packform/models"
+	"masoodrb/packform/utils"
 	"os"
 	"strconv"
 	"time"
 
-	"github.com/joho/godotenv"
-	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-
-	"masoodahm/packform/models"
-	"masoodahm/packform/utils"
 )
 
-func goDotEnvVariable(key string) string {
-	err := godotenv.Load(".env")
-	if err != nil {
-		log.Fatalf("Error loading .env file")
-	}
-	return os.Getenv(key)
-}
-
 func main() {
-	db_user := goDotEnvVariable("POSTGRES_USER")
-	db_pass := goDotEnvVariable("POSTGRES_PASSWORD")
-	db_name := goDotEnvVariable("POSTGRES_DB")
-	db_port := goDotEnvVariable("POSTGRES_PORT")
-	db_host := goDotEnvVariable("DB_HOST")
-
-	dbContext, err := getDBContext(db_host, db_name, db_pass, db_port, db_user)
+	dbContext, err := utils.GetDBContext()
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -42,7 +24,6 @@ func main() {
 	importOrders(dbContext, "seed_data/Test task - Postgres - orders.csv")
 	importOrderItems(dbContext, "seed_data/Test task - Postgres - order_items.csv")
 	importDeliveries(dbContext, "seed_data/Test task - Postgres - deliveries.csv")
-
 }
 
 func importCompanies(db *gorm.DB, csvFilePath string) {
@@ -244,13 +225,4 @@ func createTables(db *gorm.DB) {
 		&models.Order{},
 		&models.OrderItem{},
 	)
-}
-
-func getDBContext(db_host string, db_name string, db_pass string, db_port string, db_user string) (*gorm.DB, error) {
-	dsn := fmt.Sprintf(
-		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Australia/Melbourne",
-		db_host, db_user, db_pass, db_name, db_port,
-	)
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	return db, err
 }
