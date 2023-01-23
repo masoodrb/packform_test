@@ -1,9 +1,10 @@
 
 export interface OrderDetails {
-  orderName: string,
-  companyName: string,
-  customerName: string,
-  orderDate: Date,
-  deliveredAmount: Number,
-  totalAmount: Number
+  ProductName: string,
+  OrderName: string,
+  CompanyName: string,
+  CustomerName: string,
+  OrderDate: Date,
+  PricePerUnit: number,
+  Quantity: number
 }

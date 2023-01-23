@@ -13,11 +13,7 @@ import (
 )
 
 func main() {
-	dbContext, err := utils.GetDBContext()
-	if err != nil {
-		log.Fatalln(err)
-	}
-
+	dbContext := utils.GetDBContext()
 	createTables(dbContext)
 	importCompanies(dbContext, "seed_data/Test task - Postgres - customer_companies.csv")
 	importCustomers(dbContext, "seed_data/Test task - Postgres - customers.csv")

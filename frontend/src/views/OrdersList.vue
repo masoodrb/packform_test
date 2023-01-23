@@ -1,51 +1,65 @@
 <template>
   <div class="container">
     <Header
-      @onSearch="onSearch"
+      @onSearch="onQueryChange"
     >
     </Header>
-    <div>
-      <label>Created date</label>
+    <div class="content">
+      <div>
+        <h3><label>Created date</label></h3>
+      </div>
+      <div>
+        <el-date-picker 
+          v-model="selectedDate" 
+          type="daterange"
+          range-separator="-"
+          start-placeholder="Start date"
+          end-placeholder="End date"
+          @change="onDateChange"
+        />
+      </div>
+      <div>
+        <h3>Total Amount: ${{ totalAmount.toFixed(2) }} </h3>
+      </div>
+      <DataGrid></DataGrid>
     </div>
-    <div>
-      <el-date-picker 
-        v-model="selectedDate" 
-        type="daterange"
-        range-separator="-"
-        start-placeholder="Start date"
-        end-placeholder="End date"
-        @change="onDateChange"
-      />
-    </div>
-    <div>
-      Total Amount:
-    </div>
-    <DataGrid></DataGrid>
   </div>
 </template>
 <script lang="ts" setup>
 import moment from 'moment'
 
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useOrderStore } from '@/stores/order'
 import Header from '@/components/Header/index.vue'
 import DataGrid from '@/components/DataGrid/index.vue'
+import type { OrderDetails } from '@/api';
+const store = useOrderStore()
 
-const { loadOrderDetails } = useOrderStore()
+const { loadOrderDetails, dateChanged, onSearch } = useOrderStore()
 onMounted(() => {
   loadOrderDetails()
 })
-const onSearch = (value: string) => {
-  loadOrderDetails(value)
+const onQueryChange = (value: string) => {
+  onSearch(value)
+  loadOrderDetails()
 }
 
+const totalAmount = computed(() => {
+  const sumFunction = (total: number, item: OrderDetails) => {
+    let sum = 0.0
+    sum = total + (item.PricePerUnit * item.Quantity)
+    return sum
+  }
+  return store.details.reduce(sumFunction, 0)
+})
+
 const selectedDate = ref([
-  moment().startOf('month').format('YYYY-MM-DD'),
-  moment().endOf('month').format('YYYY-MM-DD')
+  store.startDate,
+  store.endDate
 ]);
 
-const onDateChange = (value) => {
-  console.log(moment(value[0]))
+const onDateChange = (value: Date[]) => {
+  dateChanged(value)
 }
 
 </script>
@@ -54,5 +68,8 @@ const onDateChange = (value) => {
 
 .container {
   padding: 15px;
+}
+.content {
+  margin: 8px
 }
 </style>
