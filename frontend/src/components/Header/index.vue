@@ -15,6 +15,7 @@
     <el-col :sm="18" :md="20">
       <el-input
         v-model="query"
+        class="searchBox"
         placeholder="Search Here"
         @change="$emit('onSearch', query)"
       >
@@ -43,5 +44,9 @@ const query = ref("");
     margin-left: 8px;
     margin-right: 8px;
   }
+}
+
+.searchBox {
+  padding-top: 8px;
 }
 </style>

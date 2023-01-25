@@ -7,8 +7,10 @@ import { RouterView } from "vue-router";
 </template>
 
 <style>
+@import url("https://fonts.googleapis.com/css2?family=Poppins&display=swap");
+
 #app {
-  font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
+  font-family: "Poppins", "Arial Narrow", Arial, sans-serif;
   color: #333333;
 }
 </style>
