@@ -1,17 +1,16 @@
 import { createApp } from "vue";
 import { createPinia } from "pinia";
 import ElementPlus from "element-plus";
-import { library } from '@fortawesome/fontawesome-svg-core'
-import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons'
+import { library } from "@fortawesome/fontawesome-svg-core";
+import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
 import "element-plus/dist/index.css";
 
 import App from "./App.vue";
 import router from "./router";
-import moment from "moment";
 
 const app = createApp(App);
 
-library.add(faMagnifyingGlass)
+library.add(faMagnifyingGlass);
 
 app.use(ElementPlus);
 app.use(createPinia());
